@@ -322,26 +322,30 @@ export const resolveContext = <STATE extends object>(
   containerState: ContainerState
 ): STATE | undefined => {
   const contextID = context.id;
-  if (!hostCtx) {
-    return;
-  }
-  let hostElement: QwikElement;
-  let ctx: QContext | null = hostCtx;
-  while (ctx) {
-    hostElement = ctx.$element$;
-    if (ctx.$contexts$) {
-      const found = ctx.$contexts$.get(contextID);
-      if (found) {
-        return found;
+  if (hostCtx) {
+    let hostElement: QwikElement = hostCtx.$element$;
+    let ctx = hostCtx.$slotParent$ ?? hostCtx.$parent$;
+    while (ctx) {
+      hostElement = ctx.$element$;
+      if (ctx.$contexts$) {
+        const found = ctx.$contexts$.get(contextID);
+        if (found) {
+          return found;
+        }
+        if (ctx.$contexts$.get('_') === true) {
+          break;
+        }
       }
-      if (ctx.$contexts$.get('_') === true) {
-        break;
+      ctx = ctx.$slotParent$ ?? ctx.$parent$;
+    }
+    if ((hostElement as any).closest) {
+      const value = queryContextFromDom(hostElement, containerState, contextID);
+      if (value !== undefined) {
+        return value;
       }
     }
-    ctx = ctx.$slotParent$ ?? ctx.$parent$;
   }
-  const value = queryContextFromDom(hostElement!, containerState, contextID);
-  return value;
+  return undefined;
 };
 
 export const queryContextFromDom = (

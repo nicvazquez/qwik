@@ -245,8 +245,11 @@ export async function runBuildCommand(app: AppCommand) {
     }))
     .catch((e) => {
       console.log(``);
-      console.log(e.stdout);
-      console.error(e.stderr);
+      if (e.stderr) {
+        console.log(e.stderr);
+      } else {
+        console.log(e.stdout);
+      }
       console.log(``);
       process.exit(1);
     });

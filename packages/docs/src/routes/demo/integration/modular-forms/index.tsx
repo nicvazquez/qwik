@@ -1,23 +1,22 @@
 // @ts-nocheck
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { $, component$ } from '@builder.io/qwik';
-import { routeLoader$ } from '@builder.io/qwik-city';
+import { routeLoader$, z } from '@builder.io/qwik-city';
 import type { InitialValues, SubmitHandler } from '@modular-forms/qwik';
-import { formAction$, useForm, valiForm$ } from '@modular-forms/qwik';
-import { email, type Input, minLength, object, string } from 'valibot';
+import { formAction$, useForm, zodForm$ } from '@modular-forms/qwik';
 
-const LoginSchema = object({
-  email: string([
-    minLength(1, 'Please enter your email.'),
-    email('The email address is badly formatted.'),
-  ]),
-  password: string([
-    minLength(1, 'Please enter your password.'),
-    minLength(8, 'Your password must have 8 characters or more.'),
-  ]),
+const loginSchema = z.object({
+  email: z
+    .string()
+    .min(1, 'Please enter your email.')
+    .email('The email address is badly formatted.'),
+  password: z
+    .string()
+    .min(1, 'Please enter your password.')
+    .min(8, 'You password must have 8 characters or more.'),
 });
 
-type LoginForm = Input<typeof LoginSchema>;
+type LoginForm = z.infer<typeof loginSchema>;
 
 export const useFormLoader = routeLoader$<InitialValues<LoginForm>>(() => ({
   email: '',
@@ -26,13 +25,13 @@ export const useFormLoader = routeLoader$<InitialValues<LoginForm>>(() => ({
 
 export const useFormAction = formAction$<LoginForm>((values) => {
   // Runs on server
-}, valiForm$(LoginSchema));
+}, zodForm$(loginSchema));
 
 export default component$(() => {
   const [loginForm, { Form, Field }] = useForm<LoginForm>({
     loader: useFormLoader(),
     action: useFormAction(),
-    validate: valiForm$(LoginSchema),
+    validate: zodForm$(loginSchema),
   });
 
   const handleSubmit: SubmitHandler<LoginForm> = $((values, event) => {
